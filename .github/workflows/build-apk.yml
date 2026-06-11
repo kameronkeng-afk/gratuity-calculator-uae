@@ -1,0 +1,45 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Extract project ZIP
+        run: |
+          unzip -q "gratuity-calculator-uae-fixed (1).zip" -d extracted/
+          ls -la extracted/
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Find and build project
+        run: |
+          # Find the gradle wrapper
+          GRADLE_DIR=$(find extracted/ -name "gradlew" | head -1 | xargs dirname)
+          echo "Found project at: $GRADLE_DIR"
+          cd "$GRADLE_DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Find APK
+        run: find . -name "*.apk" -type f
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: GratuityCalculatorUAE
+          path: |
+            **/*.apk
+          retention-days: 30
