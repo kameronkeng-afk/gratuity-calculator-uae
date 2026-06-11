@@ -19,29 +19,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Extract project ZIP
+      - name: Extract ZIP
         run: |
           unzip -q "gratuity-calculator-uae-fixed (1).zip" -d extracted/
-          echo "=== Extracted contents ==="
-          find extracted/ -type f | head -30
+          ls extracted/
+          ls extracted/GratuityUAE/
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Install Gradle 8.4
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip
+          unzip -q gradle-8.4-bin.zip
+          echo "$PWD/gradle-8.4/bin" >> $GITHUB_PATH
 
-      - name: Add Gradle Wrapper
+      - name: Build APK
         run: |
           cd extracted/GratuityUAE
-          gradle wrapper --gradle-version 8.0
+          gradle wrapper
           chmod +x gradlew
-
-      - name: Build Debug APK
-        run: |
-          cd extracted/GratuityUAE
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GratuityCalculatorUAE-debug
-          path: "extracted/**/*.apk"
+          name: GratuityCalculatorUAE
+          path: "extracted/GratuityUAE/app/build/outputs/apk/debug/*.apk"
           retention-days: 30
