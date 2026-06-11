@@ -13,28 +13,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
       - name: Extract project ZIP
         run: |
           unzip -q "gratuity-calculator-uae-fixed (1).zip" -d extracted/
-          ls -la extracted/
+          echo "=== Extracted contents ==="
+          find extracted/ -type f | head -30
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Find and build project
+      - name: Add Gradle Wrapper
         run: |
-          GRADLE_DIR=$(find extracted/ -name "gradlew" | head -1 | xargs dirname)
-          echo "Found project at: $GRADLE_DIR"
-          cd "$GRADLE_DIR"
+          cd extracted/GratuityUAE
+          gradle wrapper --gradle-version 8.0
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+
+      - name: Build Debug APK
+        run: |
+          cd extracted/GratuityUAE
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GratuityCalculatorUAE
-          path: "**/*.apk"
+          name: GratuityCalculatorUAE-debug
+          path: "extracted/**/*.apk"
           retention-days: 30
